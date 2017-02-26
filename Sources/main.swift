@@ -1,93 +1,48 @@
-func unique(array: [[Int]]) -> [[Int]] {
-    var result = [array[0]]
-    for i in 1..<array.count {
-        var isFound = false
-        for element in result {
-            if element.count == array[i].count {
-                for j in 0..<element.count {
-                    if element[j] != array[i][j] {
-                        break
-                    }
-                    if j + 1 == element.count {
-                        isFound = true
-                    }
-                }
-                if isFound {
-                    break
-                }
-            }
-        }
-        if !isFound {
-            result.append(array[i])
+func strike(_ array: [Int], from: [Int]) -> [Int] {
+    var result: Array<Int> = []
+
+    for element in from {
+        if array.index(of: element) == nil {
+            result.append(element)
         }
     }
 
     return result
 }
 
-func mutations(count: Int, numbers: Int) -> [[Int]] {
-    if count == 1 {
-        var result: Array<Array<Int>> = []
-        for i in 0..<numbers {
-            result.append([i])
-        }
-
-        return result
+func mutations(count: Int, numbers: [Int]) -> [[Int]] {
+    let start = numbers.count - count + 1
+    let length = (start...(numbers.count)).reduce(1, {x, y in x * y})
+    var repeats = Array<Int>(repeating: length / numbers.count, count: count)
+    var divisor = numbers.count
+    for i in 1..<count {
+        divisor -= 1
+        repeats[i] = repeats[i - 1] / divisor
     }
-    let start = numbers - count + 1
-    let length = (start...numbers).reduce(1, {x, y in x * y})
-    var result = Array<Array<Int>>(repeating: Array<Int>(repeating: 0, count: count), count: length)
-    var j = count
-    var v = 0
+    var result = Array<Array<Int>>(repeating: [], count: length)
     var k = 0
-    while j > 0 {
+    for i in 0..<count {
         k = 0
-        v = 0
-        for i in 0..<length {
-            if(k == j) {
-                k = 0
-                v += 1
-                if(v == numbers) {
-                    v = 0
+        while k < length {
+            for number in strike(result[k], from: numbers) {
+                for _ in 0..<repeats[i] {
+                    result[k].append(number)
+                    k += 1
                 }
             }
-            if(result[i].index(of: v) == nil) {
-                result[i][j - 1] = v   
-            }
-            k += 1
         }
-        j -= 1
     }
-    result[0][0] = numbers - 1
-    
-    return unique(array: result.map { arr in
-        let index = arr.index(of: 0)
-        if index == nil {
-            return arr
-        }
-        var transform: Array<Int> = []
-        for i in 0...index! {
-            transform.append(arr[i])
-        }
-        if index! + 1 < count {
-            for i in (index! + 1)..<count {
-                if arr[i] != 0 {
-                    transform.append(arr[i])
-                }
-            }
-        }
 
-        return transform
-    }).filter { $0.count == count }
+    return result
 }
 
 func property(member: String) -> String {
     var result = ""
-    for c in member.characters {
-        if c == ":" {
+    for char in member.characters {
+        if char == ":" {
             break
         }
-        result.append(c)
+        result.append(char)
     }
 
     return result
@@ -100,8 +55,9 @@ func generate(type: String, name: String, members: [String]) {
     for member in members {
         print("\tvar \(member)? = nil")
     }
+    let numbers = Array<Int>(0..<members.count)
     for c in 1...members.count {
-        let indexes = mutations(count: c, numbers: members.count)
+        let indexes = mutations(count: c, numbers: numbers)
         for index in indexes {
             print()
             print("\tinit(", terminator:"")
